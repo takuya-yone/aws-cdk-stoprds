@@ -71,7 +71,7 @@ export class AwsCdkStopRdsSfnStack extends cdk.Stack {
           iamAction: 'rds:StopDBCluster',
         }
       );
-      stoprds_task.addRetry({ maxAttempts: 6, backoffRate: 5 });
+      stoprds_task.addRetry({ maxAttempts: 4, backoffRate: 5 });
 
       parallel.branch(stoprds_task);
     }
