@@ -4,9 +4,39 @@ import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as events_targets from 'aws-cdk-lib/aws-events-targets';
+import { Stack, StackProps } from 'aws-cdk-lib';
+
 import { ScopedAws } from 'aws-cdk-lib';
 
+interface SubStackProps extends StackProps {
+  stopRdsStateMachine: sfn.StateMachine;
+}
+export class AwsCdkStoprdsEventStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: SubStackProps) {
+    super(scope, id, props);
+    const { accountId, region } = new ScopedAws(this);
+
+    const eventbridge_rule = new events.Rule(this, 'RdsStartEvent', {
+      targets: [new events_targets.SfnStateMachine(props.stopRdsStateMachine)],
+      eventPattern: {
+        source: ['aws.rds'],
+        detailType: ['RDS DB Cluster Event'],
+        detail: {
+          EventID: [
+            {
+              'equals-ignore-case': 'RDS-EVENT-0151',
+            },
+          ],
+        },
+      },
+    });
+  }
+}
+
 export class AwsCdkStoprdsStack extends cdk.Stack {
+  public readonly stopRdsStateMachine: sfn.StateMachine;
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -20,8 +50,8 @@ export class AwsCdkStoprdsStack extends cdk.Stack {
       (x) => `arn:aws:rds:${region}:${accountId}:cluster:${x}`
     );
 
-    const duration = cdk.Duration.minutes(15);
-    const wait = new sfn.Wait(this, 'Wait 15min', {
+    const duration = cdk.Duration.minutes(3);
+    const wait = new sfn.Wait(this, 'Wait 3min', {
       time: sfn.WaitTime.duration(duration),
     });
 
@@ -41,7 +71,7 @@ export class AwsCdkStoprdsStack extends cdk.Stack {
           iamAction: 'rds:StopDBCluster',
         }
       );
-      stoprds_task.addRetry({ maxAttempts: 5, backoffRate: 5 });
+      stoprds_task.addRetry({ maxAttempts: 5, backoffRate: 3 });
 
       parallel.branch(stoprds_task);
     }
@@ -54,14 +84,18 @@ export class AwsCdkStoprdsStack extends cdk.Stack {
       }
     );
 
-    new sfn.StateMachine(this, 'StopRdsStateMachine', {
-      definition: wait.next(parallel),
-      stateMachineName: 'StopRdsStateMachine',
-      tracingEnabled: true,
-      logs: {
-        destination: stopRdsStateMachineLogGroup,
-        level: sfn.LogLevel.ALL,
-      },
-    });
+    this.stopRdsStateMachine = new sfn.StateMachine(
+      this,
+      'StopRdsStateMachine',
+      {
+        definition: wait.next(parallel),
+        stateMachineName: 'StopRdsStateMachine',
+        tracingEnabled: true,
+        logs: {
+          destination: stopRdsStateMachineLogGroup,
+          level: sfn.LogLevel.ALL,
+        },
+      }
+    );
   }
 }
