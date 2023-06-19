@@ -13,7 +13,7 @@ import { ScopedAws } from 'aws-cdk-lib';
 interface SubStackProps extends StackProps {
   stopRdsStateMachine: sfn.StateMachine;
 }
-export class AwsCdkStoprdsEventStack extends cdk.Stack {
+export class AwsCdkStopRdsEventStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: SubStackProps) {
     super(scope, id, props);
     const { accountId, region } = new ScopedAws(this);
@@ -35,7 +35,7 @@ export class AwsCdkStoprdsEventStack extends cdk.Stack {
   }
 }
 
-export class AwsCdkStoprdsStack extends cdk.Stack {
+export class AwsCdkStopRdsSfnStack extends cdk.Stack {
   public readonly stopRdsStateMachine: sfn.StateMachine;
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -50,8 +50,8 @@ export class AwsCdkStoprdsStack extends cdk.Stack {
       (x) => `arn:aws:rds:${region}:${accountId}:cluster:${x}`
     );
 
-    const duration = cdk.Duration.minutes(3);
-    const wait = new sfn.Wait(this, 'Wait 3min', {
+    const duration = cdk.Duration.minutes(5);
+    const wait = new sfn.Wait(this, 'Wait 5min', {
       time: sfn.WaitTime.duration(duration),
     });
 
@@ -71,7 +71,7 @@ export class AwsCdkStoprdsStack extends cdk.Stack {
           iamAction: 'rds:StopDBCluster',
         }
       );
-      stoprds_task.addRetry({ maxAttempts: 5, backoffRate: 3 });
+      stoprds_task.addRetry({ maxAttempts: 6, backoffRate: 5 });
 
       parallel.branch(stoprds_task);
     }

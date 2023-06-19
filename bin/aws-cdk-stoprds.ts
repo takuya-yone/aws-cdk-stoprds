@@ -2,16 +2,16 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import {
-  AwsCdkStoprdsStack,
-  AwsCdkStoprdsEventStack,
+  AwsCdkStopRdsSfnStack,
+  AwsCdkStopRdsEventStack,
 } from '../lib/aws-cdk-stoprds-stack';
 
 import { AwsSolutionsChecks } from 'cdk-nag';
 import { Aspects } from 'aws-cdk-lib';
 
 const app = new cdk.App();
-const sfnStack = new AwsCdkStoprdsStack(app, 'AwsCdkStopRdsStack');
-const eventStack = new AwsCdkStoprdsEventStack(app, 'AwsCdkStoprdsEventStack', {
+const sfnStack = new AwsCdkStopRdsSfnStack(app, 'AwsCdkStopRdsSfnStack');
+const eventStack = new AwsCdkStopRdsEventStack(app, 'AwsCdkStopRdsEventStack', {
   stopRdsStateMachine: sfnStack.stopRdsStateMachine,
 });
 
