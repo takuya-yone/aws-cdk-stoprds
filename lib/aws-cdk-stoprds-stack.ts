@@ -88,7 +88,7 @@ export class AwsCdkStopRdsSfnStack extends cdk.Stack {
       this,
       'StopRdsStateMachine',
       {
-        definition: wait.next(parallel),
+        definitionBody: sfn.DefinitionBody.fromChainable(wait.next(parallel)),
         stateMachineName: 'StopRdsStateMachine',
         tracingEnabled: true,
         logs: {

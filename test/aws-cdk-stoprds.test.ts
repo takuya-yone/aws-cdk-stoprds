@@ -23,5 +23,4 @@ test('Unit Test', () => {
   // template.hasResourceProperties("AWS::Lambda::Function", {
   //   Runtime: "nodejs18.x",
   // });
-
 });
