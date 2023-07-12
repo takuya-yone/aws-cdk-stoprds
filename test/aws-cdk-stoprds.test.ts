@@ -1,16 +1,27 @@
-// import * as cdk from 'aws-cdk-lib';
-// import { Template } from 'aws-cdk-lib/assertions';
-// import * as AwsCdkStoprds from '../lib/aws-cdk-stoprds-stack';
+import 'source-map-support/register';
+import * as cdk from 'aws-cdk-lib';
+import {
+  AwsCdkStopRdsSfnStack,
+  AwsCdkStopRdsEventStack,
+} from '../lib/aws-cdk-stoprds-stack';
+import { Template } from 'aws-cdk-lib/assertions';
 
-// example test. To run these tests, uncomment this file along with the
-// example resource in lib/aws-cdk-stoprds-stack.ts
-test('SQS Queue Created', () => {
-  //   const app = new cdk.App();
-  //     // WHEN
-  //   const stack = new AwsCdkStoprds.AwsCdkStoprdsStack(app, 'MyTestStack');
-  //     // THEN
-  //   const template = Template.fromStack(stack);
-  //   template.hasResourceProperties('AWS::SQS::Queue', {
-  //     VisibilityTimeout: 300
-  //   });
+test('Unit Test', () => {
+  const app = new cdk.App();
+  const sfnStack = new AwsCdkStopRdsSfnStack(app, 'AwsCdkStopRdsSfnStack');
+  const eventStack = new AwsCdkStopRdsEventStack(
+    app,
+    'AwsCdkStopRdsEventStack',
+    {
+      stopRdsStateMachine: sfnStack.stopRdsStateMachine,
+    }
+  );
+
+  const template = Template.fromStack(sfnStack);
+  expect(template.toJSON()).toMatchSnapshot();
+
+  // template.hasResourceProperties("AWS::Lambda::Function", {
+  //   Runtime: "nodejs18.x",
+  // });
+
 });
